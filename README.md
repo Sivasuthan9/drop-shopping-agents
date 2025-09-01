@@ -1,54 +1,190 @@
-# Dropshoping Crew
+# Shopify Dropshipping Operations Agent
 
-Welcome to the Dropshoping Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+A multi-agent hierarchical system for simulating Shopify dropshipping operations, built with the [CrewAI](https://crewai.com) framework.
 
-## Installation
+## Overview
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+This system implements a complete dropshipping workflow using 7 specialized agents:
+- **Manager Agent** - Orchestrates the entire workflow
+- **Product Sourcing Agent** - Selects profitable products
+- **Listing Agent** - Generates optimized product content
+- **Pricing & Stock Agent** - Calculates prices and manages inventory
+- **Order Routing Agent** - Processes orders and determines fulfillment
+- **QA Agent** - Reviews content for compliance
+- **Reporter Agent** - Generates daily operations reports
 
-First, if you haven't already, install uv:
+## Quick Start
 
+### Prerequisites
+- Python ≥3.10 <3.14
+- Virtual environment activated
+
+### Installation
+
+1. **Clone and setup environment:**
 ```bash
-pip install uv
+git clone <repository-url>
+cd drop-shopping-agents
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-Next, navigate to your project directory and install the dependencies:
-
-(Optional) Lock the dependencies and install them by using the CLI command:
+2. **Install dependencies:**
 ```bash
-crewai install
-```
-### Customizing
-
-**Add your `OPENAI_API_KEY` into the `.env` file**
-
-- Modify `src/dropshoping/config/agents.yaml` to define your agents
-- Modify `src/dropshoping/config/tasks.yaml` to define your tasks
-- Modify `src/dropshoping/crew.py` to add your own logic, tools and specific args
-- Modify `src/dropshoping/main.py` to add custom inputs for your agents and tasks
-
-## Running the Project
-
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
-
-```bash
-$ crewai run
+pip install crewai[tools] pandas
 ```
 
-This command initializes the dropshoping Crew, assembling the agents and assigning them tasks as defined in your configuration.
+3. **Run the system:**
+```bash
+# Using standalone implementation (recommended)
+python standalone_app.py --catalog data/supplier_catalog.csv --orders data/orders.csv --out out/
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+# Using CrewAI framework (requires LLM setup)
+export PYTHONPATH="src:$PYTHONPATH"
+python app.py --catalog data/supplier_catalog.csv --orders data/orders.csv --out out/
+```
 
-## Understanding Your Crew
+## Sample Data
 
-The dropshoping Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+The project includes sample data:
+- **supplier_catalog.csv** - 32 products across multiple categories
+- **orders.csv** - 20 customer orders for testing
+
+## Output Files
+
+The system generates 7 output files:
+- `selection.json` - Selected products with pricing
+- `listings.json` - Generated product content  
+- `price_update.csv` - SKU pricing data
+- `stock_update.csv` - Inventory levels
+- `order_actions.json` - Order fulfillment decisions
+- `listing_redlines.json` - QA review findings
+- `daily_report.md` - Comprehensive operations summary
+
+## Business Logic
+
+### Product Selection Criteria
+- Stock level ≥ 10 units
+- Achievable margin ≥ 25%
+- Selects top 10 products by margin
+
+### Pricing Formula
+- Platform fee: 2.9% + $0.30
+- GST: 10% (Australia only)
+- Minimum 25% margin
+- Rounded to nearest $0.50
+
+### Order Fulfillment
+- **Fulfill**: Sufficient stock available
+- **Backorder**: Partial stock available
+- **Substitute**: No stock or SKU not selected
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design and agent specifications.
+
+## LLM Configuration
+
+### Local Models (Production)
+The system is designed for local Ollama models:
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull required models
+ollama pull llama3
+ollama pull mistral
+```
+
+### Environment Variables
+```bash
+# For local Ollama setup
+OLLAMA_BASE_URL=http://localhost:11434
+
+# For fallback/testing (not recommended for production)
+OPENAI_API_KEY=your_key_here
+```
+
+## Development
+
+### Project Structure
+```
+drop-shopping-agents/
+├── src/dropshoping/          # CrewAI implementation
+│   ├── config/               # Agent and task configurations
+│   ├── tools/                # Custom tools for data processing
+│   └── crew.py              # Main crew definition
+├── data/                     # Sample input data
+├── standalone_app.py         # Standalone implementation
+├── app.py                   # CLI interface for CrewAI
+└── ARCHITECTURE.md          # Detailed documentation
+```
+
+### Running with CrewAI
+
+The CrewAI implementation requires proper LLM configuration:
+
+```bash
+# Set up environment
+export PYTHONPATH="src:$PYTHONPATH"
+
+# Run with default data
+crewai run
+
+# Run with custom data
+python app.py --catalog your_catalog.csv --orders your_orders.csv --out output/
+```
+
+### Customizing Agents
+
+Modify agent configurations in:
+- `src/dropshoping/config/agents.yaml` - Agent roles and capabilities
+- `src/dropshoping/config/tasks.yaml` - Task definitions and workflows
+
+### Adding Tools
+
+Create new tools in `src/dropshoping/tools/` and import them in `crew.py`.
+
+## Sample Results
+
+### Product Selection
+- 32 products analyzed → 10 selected
+- Average margin: 26.4%
+- Stock range: 34-134 units
+
+### Order Processing
+- 20 orders processed
+- 40% fulfilled, 60% substituted
+- Customer emails generated
+
+### Quality Assurance
+- All listings reviewed
+- Compliance issues identified
+- Improvement recommendations provided
+
+## Troubleshooting
+
+### Common Issues
+
+1. **LLM Connection Errors**
+   - Use `standalone_app.py` for testing without LLM requirements
+   - Verify Ollama is running: `ollama list`
+
+2. **Import Errors**
+   - Ensure PYTHONPATH includes `src/`: `export PYTHONPATH="src:$PYTHONPATH"`
+   - Install in development mode: `pip install -e .`
+
+3. **Data File Errors**
+   - Verify CSV file paths and formats
+   - Check sample data in `data/` directory
+
+## License
+
+This project is licensed under the MIT License.
 
 ## Support
 
-For support, questions, or feedback regarding the Dropshoping Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+For support and questions:
+- Check [CrewAI Documentation](https://docs.crewai.com)
+- Review [ARCHITECTURE.md](ARCHITECTURE.md) for detailed specifications
+- Open an issue for bugs or feature requests

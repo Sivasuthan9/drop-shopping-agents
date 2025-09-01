@@ -7,6 +7,7 @@ from .tools.data_tools import (
     CalculatePricingTool, FilterProductsTool
 )
 from .tools.file_tools import WriteFileTool, ReadFileTool
+from .tools.content_tools import GenerateListingContentTool, GenerateQAReviewTool
 
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -33,7 +34,8 @@ class Dropshoping():
             config=self.agents_config['manager_agent'],
             verbose=True,
             tools=[ReadFileTool(), WriteFileTool()],
-            allow_delegation=True
+            allow_delegation=True,
+            llm=False  # Disable LLM for manager
         )
 
     @agent
@@ -41,7 +43,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['product_sourcing_agent'],
             verbose=True,
-            tools=[ReadCSVTool(), FilterProductsTool(), WriteJSONTool()]
+            tools=[ReadCSVTool(), FilterProductsTool(), WriteJSONTool()],
+            llm=False  # Use tools only
         )
 
     @agent
@@ -49,7 +52,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['listing_agent'],
             verbose=True,
-            tools=[ReadFileTool(), WriteJSONTool()]
+            tools=[ReadFileTool(), GenerateListingContentTool(), WriteJSONTool()],
+            llm=False  # Use content generation tool instead
         )
 
     @agent
@@ -57,7 +61,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['pricing_stock_agent'],
             verbose=True,
-            tools=[ReadFileTool(), CalculatePricingTool(), WriteCSVTool()]
+            tools=[ReadFileTool(), CalculatePricingTool(), WriteCSVTool()],
+            llm=False  # Use tools only
         )
 
     @agent
@@ -65,7 +70,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['order_routing_agent'],
             verbose=True,
-            tools=[ReadCSVTool(), ReadFileTool(), WriteJSONTool()]
+            tools=[ReadCSVTool(), ReadFileTool(), WriteJSONTool()],
+            llm=False  # Use tools only
         )
 
     @agent
@@ -73,7 +79,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['qa_agent'],
             verbose=True,
-            tools=[ReadFileTool(), WriteJSONTool()]
+            tools=[ReadFileTool(), GenerateQAReviewTool(), WriteJSONTool()],
+            llm=False  # Use QA tool instead
         )
 
     @agent
@@ -81,7 +88,8 @@ class Dropshoping():
         return Agent(
             config=self.agents_config['reporter_agent'],
             verbose=True,
-            tools=[ReadFileTool(), WriteFileTool()]
+            tools=[ReadFileTool(), WriteFileTool()],
+            llm=False  # Use template-based reporting
         )
 
     # To learn more about structured task outputs,

@@ -67,7 +67,8 @@ poetry.lock
 pylint-report.txt
 pylint-global.json
 
-.env
-__pycache__/
-.DS_Store
+# Project-specific
+out/
+report.md
+.crewai/
 
