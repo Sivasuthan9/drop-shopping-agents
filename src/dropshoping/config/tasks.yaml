@@ -1,17 +1,122 @@
-research_task:
+product_sourcing_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Read the supplier catalog from {catalog_file} and select 10 products that meet the following criteria:
+    - Stock level >= 10 units
+    - Can achieve margin >= 25% using the pricing formula
+    
+    Use the read_csv_tool to load the catalog, then filter_products_tool to find suitable products.
+    Select exactly 10 products from those that meet the criteria.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A JSON file named selection.json containing exactly 10 selected products with their
+    supplier_sku, name, cost_price, stock, calculated_price, and calculated_margin.
+  agent: product_sourcing_agent
+  output_file: '{output_dir}/selection.json'
 
-reporting_task:
+listing_generation_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    For each of the 10 selected products from the previous task, generate compelling e-commerce content:
+    - Catchy product title (50-80 characters)
+    - 3-5 descriptive bullet points highlighting key features
+    - Full product description (100-200 words)
+    - 5-8 relevant search tags/keywords
+    - SEO meta title (50-60 characters)
+    - SEO meta description (150-160 characters)
+    
+    Focus on benefits, use persuasive language, and optimize for search engines.
+    Base content on the existing product information from the catalog.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A JSON file named listings.json containing all generated content for each product,
+    with fields: supplier_sku, title, bullet_points, description, tags, seo_title, meta_description.
+  agent: listing_agent
+  output_file: '{output_dir}/listings.json'
+
+pricing_stock_task:
+  description: >
+    For each selected product, calculate the final selling price using the pricing formula
+    and extract current stock levels. Create two CSV files:
+    
+    1. price_update.csv with columns: sku, price
+    2. stock_update.csv with columns: sku, stock
+    
+    Use the calculate_pricing_tool for accurate price calculations ensuring minimum 25% margin.
+  expected_output: >
+    Two CSV files:
+    - price_update.csv with SKU and calculated selling prices
+    - stock_update.csv with SKU and current stock levels
+  agent: pricing_stock_agent
+
+order_routing_task:
+  description: >
+    Read the orders file from {orders_file} and process each order:
+    1. Check if the ordered SKU is in our selected products
+    2. Verify stock availability against order quantity
+    3. Make fulfillment decision: Fulfill (if enough stock), Backorder (if insufficient stock), or Substitute (if out of stock)
+    4. Generate appropriate customer email content for backorders and substitutions
+    
+    Use read_csv_tool to load orders and reference the selection data from previous tasks.
+  expected_output: >
+    A JSON file named order_actions.json containing each order with fields:
+    order_id, sku, quantity, action (fulfill/backorder/substitute), customer_email_content
+  agent: order_routing_agent
+  output_file: '{output_dir}/order_actions.json'
+
+qa_review_task:
+  description: >
+    Review all generated product listings for potential issues:
+    - Identify exaggerated or unsubstantiated claims
+    - Check for overly promotional language that might mislead customers
+    - Spot potential compliance issues
+    - Suggest improvements for accuracy and truthfulness
+    
+    Analyze each product's generated content against its original supplier description.
+  expected_output: >
+    A JSON file named listing_redlines.json containing QA findings with fields:
+    supplier_sku, issues_found, severity (low/medium/high), recommendations, revised_content_suggestions
+  agent: qa_agent
+  output_file: '{output_dir}/listing_redlines.json'
+
+daily_report_task:
+  description: >
+    Compile a comprehensive daily operations report summarizing all activities:
+    
+    ## Executive Summary
+    - Number of products selected and criteria used
+    - Total orders processed and fulfillment breakdown
+    - Key QA findings and recommendations
+    
+    ## Product Selection Results
+    - List selected products with margins and stock levels
+    - Summary of pricing strategy applied
+    
+    ## Order Processing Summary
+    - Orders fulfilled, backordered, and substituted
+    - Customer communication summary
+    
+    ## Quality Assurance Findings
+    - Major issues identified in listings
+    - Recommendations for improvement
+    
+    ## Next Steps and Recommendations
+    
+    Use data from all previous tasks to create this comprehensive report.
+  expected_output: >
+    A markdown file named daily_report.md containing a comprehensive summary
+    of all dropshipping operations performed today.
+  agent: reporter_agent
+  output_file: '{output_dir}/daily_report.md'
+
+workflow_coordination_task:
+  description: >
+    Coordinate the entire dropshipping workflow by managing the execution sequence:
+    1. Monitor product sourcing completion
+    2. Ensure listing generation uses sourced products
+    3. Verify pricing calculations are applied correctly
+    4. Confirm order routing references correct inventory
+    5. Validate QA review covers all listings
+    6. Ensure daily report includes all activities
+    
+    Track progress and handle any coordination issues between agents.
+  expected_output: >
+    Workflow coordination complete with all tasks executed in proper sequence
+    and all output files generated successfully.
+  agent: manager_agent
